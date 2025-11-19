@@ -33,10 +33,21 @@ export function createDOMElement(vnode) {
     return document.createTextNode(vnode.text || '');
   }
   
-  // Handle component functions (will be improved in step 4)
+  // Handle component functions
   if (typeof vnode.type === 'function') {
-    const componentVNode = vnode.type(vnode.props);
-    return createDOMElement(componentVNode);
+    const { renderComponent, registerComponentInstance, getComponentInstance } = 
+      require('./component.js');
+    
+    const instance = getComponentInstance(vnode.type, vnode.props);
+    const componentVNode = instance.render();
+    const element = createDOMElement(componentVNode);
+    
+    // Register the instance with its DOM element
+    if (element) {
+      registerComponentInstance(vnode.type, element, instance);
+    }
+    
+    return element;
   }
   
   // Handle Fragment
