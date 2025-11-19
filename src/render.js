@@ -1,12 +1,17 @@
 // render.js
 // Renders Virtual DOM to actual DOM
 
+import { initEventDelegation } from './events.js';
+
 /**
  * Renders a Virtual DOM node into a container
  * @param {object} vnode - Virtual DOM node
  * @param {HTMLElement} container - DOM container element
  */
 export function render(vnode, container) {
+  // Initialize event delegation for this container
+  initEventDelegation(container);
+  
   // Clear the container
   container.innerHTML = '';
   
@@ -104,12 +109,16 @@ function setProp(element, name, value) {
   } else if (name === 'style' && typeof value === 'object') {
     Object.assign(element.style, value);
   } else if (name.startsWith('on')) {
-    // Event handler (will be improved in step 6)
+    // Event handler - use event delegation system
+    const { attachEventHandler } = require('./events.js');
     const eventType = name.substring(2).toLowerCase();
-    element.addEventListener(eventType, value);
+    attachEventHandler(element, eventType, value);
   } else if (name === 'key' || name === 'ref') {
     // Special props - handled separately
     return;
+  } else if (name === 'value' || name === 'checked') {
+    // Form element properties
+    element[name] = value;
   } else {
     // Regular attribute
     element.setAttribute(name, value);

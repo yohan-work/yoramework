@@ -10,6 +10,7 @@ import {
   getCurrentComponent 
 } from './component.js';
 import { useState, useEffect, useRef, useMemo, useCallback } from './hooks.js';
+import { initEventDelegation } from './events.js';
 
 const Yoramework = {
   createElement,
@@ -18,6 +19,7 @@ const Yoramework = {
   renderComponent,
   getComponentInstance,
   getCurrentComponent,
+  initEventDelegation,
   useState,
   useEffect,
   useRef,
@@ -34,6 +36,7 @@ export {
   renderComponent,
   getComponentInstance,
   getCurrentComponent,
+  initEventDelegation,
   useState, 
   useEffect, 
   useRef, 
