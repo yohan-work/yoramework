@@ -1,5 +1,4 @@
 // Todo App - Demo application for Yoramework
-// This file will be populated in later steps
 
 import Yoramework from '../../src/index.js';
 
@@ -18,15 +17,31 @@ function App() {
       }}>
         Yoramework Demo
       </h1>
-      <p style={{ color: '#666' }}>
-        Framework is being set up...
+      <p style={{ color: '#666', marginBottom: '16px' }}>
+        Step 2 Complete: Virtual DOM & Render
       </p>
+      <div style={{ 
+        padding: '16px', 
+        background: '#f0f0f0', 
+        borderRadius: '8px',
+        marginTop: '16px'
+      }}>
+        <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#333' }}>
+          Features Working:
+        </h3>
+        <ul style={{ paddingLeft: '20px', color: '#555' }}>
+          <li>createElement (JSX to Virtual DOM)</li>
+          <li>render (Virtual DOM to Real DOM)</li>
+          <li>Component rendering</li>
+          <li>Style props</li>
+        </ul>
+      </div>
     </div>
   );
 }
 
-// This will work once we implement render in step 2
-// Yoramework.render(<App />, document.getElementById('root'));
+// Render the app!
+Yoramework.render(<App />, document.getElementById('root'));
 
-console.log('Yoramework loaded:', Yoramework);
+console.log('✅ Yoramework Step 2: Virtual DOM & Render complete!');
 
