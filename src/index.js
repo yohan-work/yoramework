@@ -11,6 +11,7 @@ import {
 } from './component.js';
 import { useState, useEffect, useRef, useMemo, useCallback } from './hooks.js';
 import { initEventDelegation } from './events.js';
+import { createContext, useContext } from './context.js';
 
 const Yoramework = {
   createElement,
@@ -20,11 +21,13 @@ const Yoramework = {
   getComponentInstance,
   getCurrentComponent,
   initEventDelegation,
+  createContext,
   useState,
   useEffect,
   useRef,
   useMemo,
   useCallback,
+  useContext,
   Fragment: 'FRAGMENT',
 };
 
@@ -37,10 +40,12 @@ export {
   getComponentInstance,
   getCurrentComponent,
   initEventDelegation,
+  createContext,
   useState, 
   useEffect, 
   useRef, 
   useMemo, 
-  useCallback 
+  useCallback,
+  useContext
 };
 
