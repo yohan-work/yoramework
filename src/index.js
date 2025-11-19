@@ -3,11 +3,13 @@
 
 import { createElement } from './createElement.js';
 import { render } from './render.js';
+import { reconcile } from './reconciler.js';
 import { useState, useEffect, useRef, useMemo, useCallback } from './hooks.js';
 
 const Yoramework = {
   createElement,
   render,
+  reconcile,
   useState,
   useEffect,
   useRef,
@@ -17,5 +19,5 @@ const Yoramework = {
 };
 
 export default Yoramework;
-export { createElement, render, useState, useEffect, useRef, useMemo, useCallback };
+export { createElement, render, reconcile, useState, useEffect, useRef, useMemo, useCallback };
 
