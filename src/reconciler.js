@@ -17,13 +17,13 @@ export function reconcile(parentElement, oldVNode, newVNode, index = 0) {
     }
     return;
   }
-  
+
   // Case 2: Node removed
   if (oldVNode && !newVNode) {
     parentElement.removeChild(parentElement.childNodes[index]);
     return;
   }
-  
+
   // Case 3: Node replaced (different type)
   if (hasTypeChanged(oldVNode, newVNode)) {
     const newElement = createDOMElement(newVNode);
@@ -32,7 +32,7 @@ export function reconcile(parentElement, oldVNode, newVNode, index = 0) {
     }
     return;
   }
-  
+
   // Case 4: Text node changed
   if (newVNode.type === 'TEXT_NODE') {
     if (oldVNode.text !== newVNode.text) {
@@ -40,10 +40,10 @@ export function reconcile(parentElement, oldVNode, newVNode, index = 0) {
     }
     return;
   }
-  
+
   // Case 5: Same type - update props and reconcile children
   const element = parentElement.childNodes[index];
-  
+
   if (element && element.nodeType === 1) { // Element node
     updateProps(element, oldVNode.props || {}, newVNode.props || {});
     reconcileChildren(element, oldVNode.children || [], newVNode.children || []);
@@ -56,12 +56,75 @@ export function reconcile(parentElement, oldVNode, newVNode, index = 0) {
  * @param {array} oldChildren - Old children Virtual DOM nodes
  * @param {array} newChildren - New children Virtual DOM nodes
  */
+/**
+ * Reconciles children of a node using keys
+ * @param {HTMLElement} parentElement - Parent DOM element
+ * @param {array} oldChildren - Old children Virtual DOM nodes
+ * @param {array} newChildren - New children Virtual DOM nodes
+ */
 function reconcileChildren(parentElement, oldChildren, newChildren) {
-  const maxLength = Math.max(oldChildren.length, newChildren.length);
-  
-  for (let i = 0; i < maxLength; i++) {
-    reconcile(parentElement, oldChildren[i], newChildren[i], i);
-  }
+  const oldMap = {};
+  const newMap = {};
+
+  // Map old children by key or index
+  oldChildren.forEach((child, index) => {
+    const key = child.props && child.props.key ? child.props.key : `__index_${index}`;
+    oldMap[key] = { vnode: child, index };
+  });
+
+  // Get current DOM nodes before we start moving them
+  const domNodes = Array.from(parentElement.childNodes);
+
+  // Keep track of last placed index to detect moves
+  let lastPlacedIndex = 0;
+
+  // Iterate through new children
+  newChildren.forEach((newChild, index) => {
+    const key = newChild.props && newChild.props.key ? newChild.props.key : `__index_${index}`;
+    newMap[key] = newChild;
+
+    const oldItem = oldMap[key];
+
+    if (oldItem) {
+      // Update existing node
+      const oldVNode = oldItem.vnode;
+      const oldDOMNode = domNodes[oldItem.index];
+
+      // If the node exists in DOM (it should), we might need to move it
+      if (oldDOMNode) {
+        // If the current DOM node at this position is not the one we want, move it
+        const currentDOMNode = parentElement.childNodes[index];
+        if (currentDOMNode !== oldDOMNode) {
+          parentElement.insertBefore(oldDOMNode, currentDOMNode);
+        }
+      }
+
+      // Recursively reconcile
+      reconcile(parentElement, oldVNode, newChild, index);
+    } else {
+      // New node - create and insert
+      const newElement = createDOMElement(newChild);
+      if (newElement) {
+        const currentDOMNode = parentElement.childNodes[index];
+        if (currentDOMNode) {
+          parentElement.insertBefore(newElement, currentDOMNode);
+        } else {
+          parentElement.appendChild(newElement);
+        }
+      }
+    }
+  });
+
+  // Remove old nodes that are not in new children
+  Object.keys(oldMap).forEach(key => {
+    if (!newMap.hasOwnProperty(key)) {
+      const oldItem = oldMap[key];
+      const nodeToRemove = domNodes[oldItem.index];
+      if (nodeToRemove && nodeToRemove.parentNode === parentElement) {
+        parentElement.removeChild(nodeToRemove);
+      }
+    }
+  });
 }
 
 /**
@@ -71,8 +134,8 @@ function reconcileChildren(parentElement, oldChildren, newChildren) {
  * @returns {boolean} True if type has changed
  */
 function hasTypeChanged(oldVNode, newVNode) {
-  return typeof oldVNode.type !== typeof newVNode.type || 
-         oldVNode.type !== newVNode.type;
+  return typeof oldVNode.type !== typeof newVNode.type ||
+    oldVNode.type !== newVNode.type;
 }
 
 /**
@@ -88,7 +151,7 @@ function updateProps(element, oldProps, newProps) {
       removeProp(element, name, oldProps[name]);
     }
   });
-  
+
   // Set new or changed props
   Object.keys(newProps).forEach(name => {
     if (oldProps[name] !== newProps[name]) {
@@ -120,12 +183,12 @@ function setProp(element, name, value, oldValue) {
   } else if (name.startsWith('on')) {
     // Event handler
     const eventType = name.substring(2).toLowerCase();
-    
+
     // Remove old listener
     if (oldValue) {
       element.removeEventListener(eventType, oldValue);
     }
-    
+
     // Add new listener
     if (value) {
       element.addEventListener(eventType, value);
@@ -172,18 +235,18 @@ function createDOMElement(vnode) {
   if (!vnode) {
     return null;
   }
-  
+
   // Handle text nodes
   if (vnode.type === 'TEXT_NODE') {
     return document.createTextNode(vnode.text || '');
   }
-  
+
   // Handle component functions
   if (typeof vnode.type === 'function') {
     const componentVNode = vnode.type(vnode.props);
     return createDOMElement(componentVNode);
   }
-  
+
   // Handle Fragment
   if (vnode.type === 'FRAGMENT') {
     const fragment = document.createDocumentFragment();
@@ -195,15 +258,15 @@ function createDOMElement(vnode) {
     });
     return fragment;
   }
-  
+
   // Create regular DOM element
   const element = document.createElement(vnode.type);
-  
+
   // Set properties
   Object.keys(vnode.props || {}).forEach(key => {
     setProp(element, key, vnode.props[key]);
   });
-  
+
   // Recursively create children
   if (vnode.children) {
     vnode.children.forEach(child => {
@@ -213,7 +276,7 @@ function createDOMElement(vnode) {
       }
     });
   }
-  
+
   return element;
 }
 
