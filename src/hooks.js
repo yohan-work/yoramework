@@ -1,7 +1,11 @@
 // hooks.js
 // Implements React-like hooks for functional components
 
-import { getCurrentComponent, getNextHookIndex, reRenderComponent } from './component.js';
+import {
+  getCurrentComponent,
+  getNextHookIndex,
+  reRenderComponent,
+} from "./component.js";
 
 /**
  * useState Hook
@@ -11,38 +15,37 @@ import { getCurrentComponent, getNextHookIndex, reRenderComponent } from './comp
  */
 export function useState(initialValue) {
   const component = getCurrentComponent();
-  
+
   if (!component) {
-    throw new Error('useState must be called inside a component');
+    throw new Error("useState must be called inside a component");
   }
-  
+
   const hookIndex = getNextHookIndex();
-  
+
   // Initialize hook state if it doesn't exist
   if (component.hooks[hookIndex] === undefined) {
     component.hooks[hookIndex] = {
-      type: 'useState',
-      state: typeof initialValue === 'function' ? initialValue() : initialValue,
+      type: "useState",
+      state: typeof initialValue === "function" ? initialValue() : initialValue,
     };
   }
-  
+
   const hook = component.hooks[hookIndex];
-  
+
   // setState function
   const setState = (newValue) => {
-    const nextState = typeof newValue === 'function' 
-      ? newValue(hook.state) 
-      : newValue;
-    
+    const nextState =
+      typeof newValue === "function" ? newValue(hook.state) : newValue;
+
     // Only update if state actually changed
     if (nextState !== hook.state) {
       hook.state = nextState;
-      
+
       // Schedule re-render
       scheduleReRender(component);
     }
   };
-  
+
   return [hook.state, setState];
 }
 
@@ -54,36 +57,38 @@ export function useState(initialValue) {
  */
 export function useEffect(callback, deps) {
   const component = getCurrentComponent();
-  
+
   if (!component) {
-    throw new Error('useEffect must be called inside a component');
+    throw new Error("useEffect must be called inside a component");
   }
-  
+
   const hookIndex = getNextHookIndex();
-  
+
   // Initialize hook state if it doesn't exist
   if (component.hooks[hookIndex] === undefined) {
     component.hooks[hookIndex] = {
-      type: 'useEffect',
+      type: "useEffect",
       callback,
       deps,
       cleanup: null,
     };
-    
+
     // Schedule effect to run after render
     scheduleEffect(component, hookIndex);
   } else {
     const hook = component.hooks[hookIndex];
-    
+
     // Check if dependencies changed
-    const depsChanged = !deps || !hook.deps || 
+    const depsChanged =
+      !deps ||
+      !hook.deps ||
       deps.length !== hook.deps.length ||
       deps.some((dep, i) => dep !== hook.deps[i]);
-    
+
     if (depsChanged) {
       hook.callback = callback;
       hook.deps = deps;
-      
+
       // Schedule effect to run after render
       scheduleEffect(component, hookIndex);
     }
@@ -98,21 +103,21 @@ export function useEffect(callback, deps) {
  */
 export function useRef(initialValue) {
   const component = getCurrentComponent();
-  
+
   if (!component) {
-    throw new Error('useRef must be called inside a component');
+    throw new Error("useRef must be called inside a component");
   }
-  
+
   const hookIndex = getNextHookIndex();
-  
+
   // Initialize hook state if it doesn't exist
   if (component.hooks[hookIndex] === undefined) {
     component.hooks[hookIndex] = {
-      type: 'useRef',
+      type: "useRef",
       ref: { current: initialValue },
     };
   }
-  
+
   return component.hooks[hookIndex].ref;
 }
 
@@ -125,34 +130,36 @@ export function useRef(initialValue) {
  */
 export function useMemo(factory, deps) {
   const component = getCurrentComponent();
-  
+
   if (!component) {
-    throw new Error('useMemo must be called inside a component');
+    throw new Error("useMemo must be called inside a component");
   }
-  
+
   const hookIndex = getNextHookIndex();
-  
+
   // Initialize hook state if it doesn't exist
   if (component.hooks[hookIndex] === undefined) {
     component.hooks[hookIndex] = {
-      type: 'useMemo',
+      type: "useMemo",
       value: factory(),
       deps,
     };
   } else {
     const hook = component.hooks[hookIndex];
-    
+
     // Check if dependencies changed
-    const depsChanged = !deps || !hook.deps ||
+    const depsChanged =
+      !deps ||
+      !hook.deps ||
       deps.length !== hook.deps.length ||
       deps.some((dep, i) => dep !== hook.deps[i]);
-    
+
     if (depsChanged) {
       hook.value = factory();
       hook.deps = deps;
     }
   }
-  
+
   return component.hooks[hookIndex].value;
 }
 
@@ -168,6 +175,55 @@ export function useCallback(callback, deps) {
 }
 
 /**
+ * useReducer Hook
+ * Redux-style state management for components
+ * @param {function} reducer - Reducer function (state, action) => newState
+ * @param {any} initialState - Initial state value
+ * @param {function} init - Optional lazy initialization function
+ * @returns {array} [state, dispatch] tuple
+ */
+export function useReducer(reducer, initialState, init) {
+  const component = getCurrentComponent();
+
+  if (!component) {
+    throw new Error("useReducer must be called inside a component");
+  }
+
+  const hookIndex = getNextHookIndex();
+
+  // Initialize hook state if it doesn't exist
+  if (component.hooks[hookIndex] === undefined) {
+    const initializedState = init ? init(initialState) : initialState;
+
+    component.hooks[hookIndex] = {
+      type: "useReducer",
+      state: initializedState,
+      reducer,
+    };
+  }
+
+  const hook = component.hooks[hookIndex];
+
+  // Update reducer reference (in case it changes between renders)
+  hook.reducer = reducer;
+
+  // dispatch function
+  const dispatch = (action) => {
+    const nextState = hook.reducer(hook.state, action);
+
+    // Only update if state actually changed
+    if (nextState !== hook.state) {
+      hook.state = nextState;
+
+      // Schedule re-render
+      scheduleReRender(component);
+    }
+  };
+
+  return [hook.state, dispatch];
+}
+
+/**
  * Schedules a component re-render
  * Uses microtask queue for batching multiple state updates
  */
@@ -176,19 +232,19 @@ let isReRenderScheduled = false;
 
 function scheduleReRender(component) {
   reRenderQueue.add(component);
-  
+
   if (!isReRenderScheduled) {
     isReRenderScheduled = true;
-    
+
     // Use microtask for batching
     queueMicrotask(() => {
       isReRenderScheduled = false;
-      
+
       // Process all queued re-renders
-      reRenderQueue.forEach(comp => {
+      reRenderQueue.forEach((comp) => {
         reRenderComponent(comp);
       });
-      
+
       reRenderQueue.clear();
     });
   }
@@ -199,7 +255,7 @@ function scheduleReRender(component) {
  */
 function scheduleEffect(component, hookIndex) {
   const hook = component.hooks[hookIndex];
-  
+
   // Add to component's effects queue
   if (!component.effects[hookIndex]) {
     component.effects[hookIndex] = {
@@ -208,11 +264,11 @@ function scheduleEffect(component, hookIndex) {
       shouldRun: false,
     };
   }
-  
+
   const effect = component.effects[hookIndex];
   effect.callback = hook.callback;
   effect.shouldRun = true;
-  
+
   // Schedule effect to run after render completes
   queueMicrotask(() => {
     if (effect.shouldRun) {
@@ -220,15 +276,14 @@ function scheduleEffect(component, hookIndex) {
       if (effect.cleanup) {
         effect.cleanup();
       }
-      
+
       // Run the effect and store cleanup function
       const cleanup = effect.callback();
-      if (typeof cleanup === 'function') {
+      if (typeof cleanup === "function") {
         effect.cleanup = cleanup;
       }
-      
+
       effect.shouldRun = false;
     }
   });
 }
-

@@ -9,7 +9,7 @@ import {
   getComponentInstance, 
   getCurrentComponent 
 } from './component.js';
-import { useState, useEffect, useRef, useMemo, useCallback } from './hooks.js';
+import { useState, useEffect, useRef, useMemo, useCallback, useReducer } from './hooks.js';
 import { initEventDelegation } from './events.js';
 import { createContext, useContext } from './context.js';
 
@@ -27,6 +27,7 @@ const Yoramework = {
   useRef,
   useMemo,
   useCallback,
+  useReducer,
   useContext,
   Fragment: 'FRAGMENT',
 };
@@ -46,6 +47,7 @@ export {
   useRef, 
   useMemo, 
   useCallback,
+  useReducer,
   useContext
 };
 
