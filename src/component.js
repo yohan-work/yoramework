@@ -36,6 +36,24 @@ class ComponentInstance {
       // Call the component function to get the vnode
       this.vnode = this.component(this.props);
       return this.vnode;
+    } catch (error) {
+      // Check if there's an error handler (from ErrorBoundary)
+      if (typeof window !== 'undefined' && window.__YORAMEWORK_ERROR_HANDLER__) {
+        const errorInfo = {
+          componentStack: this.component.name || 'Anonymous Component',
+        };
+        window.__YORAMEWORK_ERROR_HANDLER__(error, errorInfo);
+        
+        // Return a placeholder to prevent further errors
+        return {
+          type: 'div',
+          props: {},
+          children: [],
+        };
+      }
+      
+      // If no error handler, re-throw
+      throw error;
     } finally {
       // Reset current component
       currentComponent = null;

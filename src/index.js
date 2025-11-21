@@ -12,6 +12,7 @@ import {
 import { useState, useEffect, useRef, useMemo, useCallback, useReducer } from './hooks.js';
 import { initEventDelegation } from './events.js';
 import { createContext, useContext } from './context.js';
+import { ErrorBoundary, withErrorBoundary, useErrorHandler } from './errorBoundary.js';
 
 const Yoramework = {
   createElement,
@@ -29,6 +30,9 @@ const Yoramework = {
   useCallback,
   useReducer,
   useContext,
+  ErrorBoundary,
+  withErrorBoundary,
+  useErrorHandler,
   Fragment: 'FRAGMENT',
 };
 
@@ -48,6 +52,9 @@ export {
   useMemo, 
   useCallback,
   useReducer,
-  useContext
+  useContext,
+  ErrorBoundary,
+  withErrorBoundary,
+  useErrorHandler
 };
 
